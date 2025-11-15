@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice #{{ order.invoice_number }}</title>
+    <meta charset="utf-8">
+    
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            color: #000;
+            font-size: 9pt;
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Header Section */
+        .header-table {
+            border: 2px solid #000;
+            margin-bottom: 0;
+        }
+        
+        .gstin-row td {
+            padding: 8px;
+            border-bottom: 1px solid #000;
+            background: #f5f5f5;
+            font-size: 9pt;
+        }
+        
+        .main-header-row td {
+            padding: 10px;
+            vertical-align: top;
+            font-size: 8.5pt;
+        }
+        
+        .header-left {
+            width: 30%;
+            border-right: 1px solid #000;
+        }
+        
+        .header-center {
+            width: 40%;
+            text-align: center;
+        }
+        
+        .header-right {
+            width: 30%;
+            text-align: left;
+            padding-left: 10px;
+        }
+        
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .invoice-title {
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .doc-checkbox {
+            margin: 2px 0;
+            font-size: 7.5pt;
+        }
+
+        /* Details Section */
+        .details-table {
+            border: 2px solid #000;
+            border-top: none;
+        }
+        
+        .details-table td {
+            padding: 8px;
+            vertical-align: top;
+            font-size: 8.5pt;
+        }
+        
+        .details-left {
+            width: 50%;
+            border-right: 1px solid #000;
+        }
+
+        /* Items Table */
+        .items-table {
+            border: 2px solid #000;
+            border-top: none;
+            font-size: 8pt;
+        }
+        
+        .items-table th {
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 7pt;
+            border: 1px solid #000;
+            background: #fff;
+            white-space: nowrap;
+        }
+        
+        .items-table td {
+            padding: 8px 4px;
+            border: 1px solid #000;
+            vertical-align: middle;
+            font-size: 8pt;
+        }
+        
+        .items-table .totals-row td {
+            padding: 8px 3px;
+            font-weight: bold;
+            background: #fff;
+        }
+        
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+
+        /* Summary Section */
+        .summary-table {
+            border: 2px solid #000;
+            border-top: none;
+            font-size: 8.5pt;
+        }
+        
+        .summary-table td {
+            padding: 10px;
+        }
+        
+        .bill-amount {
+            text-align: right;
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        /* Footer Section */
+        .footer-table {
+            border: 2px solid #000;
+            border-top: none;
+            font-size: 8.5pt;
+        }
+        
+        .footer-table td {
+            padding: 10px;
+            vertical-align: top;
+        }
+        
+        .footer-left {
+            width: 60%;
+            border-right: 1px solid #000;
+        }
+        
+        .signature-area {
+            text-align: right;
+            margin-top: 40px;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            margin-top: 60px;
+            display: inline-block;
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Header -->
+    <table class="header-table">
+        <tr class="gstin-row">
+            <td colspan="3">
+                <strong>GSTIN : {{ order.company.gst_number|default:"N/A" }}</strong>
+            </td>
+        </tr>
+        <tr class="main-header-row">
+            <td class="header-left">
+                <strong>Invoice No.</strong> : {{ order.invoice_number }}<br>
+                <strong>Invoice Date</strong> : {{ order.order_date|date:"d-M-Y" }}
+            </td>
+            <td class="header-center">
+                <div class="company-name">{{ order.company.name|upper }}</div>
+                <div style="font-size: 8.5pt; line-height: 1.4;">
+                    {{ order.company.address|default_if_none:""|linebreaksbr }}
+                </div>
+                <div class="invoice-title">INVOICE</div>
+            </td>
+            <td class="header-right">
+                <div class="doc-checkbox">&#9634; Original for Receipient</div>
+                <div class="doc-checkbox">&#9634; Duplicate for Transporter</div>
+                <div class="doc-checkbox">&#9634; Triplicate for Supplier</div>
+                <br>
+                {% if order.vehicle_number %}
+                <strong>VEHICLE NO : {{ order.vehicle_number }}</strong><br>
+                {% endif %}
+                <strong>State : {{ order.customer.state }}</strong><br>
+                <strong>State Code : 32</strong>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Details Section -->
+    <table class="details-table">
+        <tr>
+            <td class="details-left">
+                <strong>Details of Receiver | Billed to:</strong><br><br>
+                <strong>Customer: {{ order.customer.name }}</strong><br>
+                {{ order.customer.address_line_1 }}<br>
+                {% if order.customer.address_line_2 %}{{ order.customer.address_line_2 }}<br>{% endif %}
+                {{ order.customer.city }}, {{ order.customer.pincode }}<br>
+                <br>
+                <strong>Ph:</strong> {{ order.customer.phone|default:"N/A" }}<br>
+                <strong>GSTIN : {{ order.customer.gst_number|default:"N/A" }}</strong>
+            </td>
+            <td>
+                <strong>Details of Consignee | Shipped to:</strong>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 3%;">No</th>
+                <th style="width: 22%;">Name of Product / Service</th>
+                <th style="width: 7%;">HSN<br>Code</th>
+                <th style="width: 5%;">Qty</th>
+                <th style="width: 7%;">Rate</th>
+                <th style="width: 9%;">Taxable<br>Value</th>
+                <th style="width: 5%;">IGST<br>%</th>
+                <th style="width: 7%;">IGST<br>Amt</th>
+                <th style="width: 5%;">CGST<br>%</th>
+                <th style="width: 7%;">CGST<br>Amt</th>
+                <th style="width: 5%;">SGST<br>%</th>
+                <th style="width: 7%;">SGST<br>Amt</th>
+                <th style="width: 9%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="text-center"><strong>{{ item.no }}</strong></td>
+                <td class="text-left">{{ item.name }}</td>
+                <td class="text-center">{{ item.hsn_code }}</td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-right">{{ item.price|floatformat:2 }}</td>
+                <td class="text-right">{{ item.taxable_amount|floatformat:2 }}</td>
+                <td class="text-center">0.00</td>
+                <td class="text-right">0.00</td>
+                <td class="text-center">{{ item.cgst_rate|floatformat:2 }}</td>
+                <td class="text-right">{{ item.cgst_amount|floatformat:2 }}</td>
+                <td class="text-center">{{ item.sgst_rate|floatformat:2 }}</td>
+                <td class="text-right">{{ item.sgst_amount|floatformat:2 }}</td>
+                <td class="text-right">{{ item.total|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="13" class="text-center" style="padding: 15px;">
+                    No items found for this invoice.
+                </td>
+            </tr>
+            {% endfor %}
+            
+            <tr class="totals-row">
+                <td colspan="3"></td>
+                <td class="text-center">{{ items|length }}</td>
+                <td></td>
+                <td class="text-right">{{ subtotal|floatformat:2 }}</td>
+                <td></td>
+                <td class="text-right">0.00</td>
+                <td></td>
+                <td class="text-right">{{ total_cgst_amt|floatformat:2 }}</td>
+                <td></td>
+                <td class="text-right">{{ total_sgst_amt|floatformat:2 }}</td>
+                <td class="text-right">{{ final_total_before_round|floatformat:2 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Summary Section -->
+    <table class="summary-table">
+        <tr>
+            <td>
+                {{ amount_words }}
+            </td>
+            <td style="width: 30%; text-align: right;">
+                <strong>Round Off : {{ round_off|floatformat:2 }}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="bill-amount">
+                <strong>Bill Amount : {{ rounded_amount|floatformat:2 }}</strong>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Footer Section -->
+    <table class="footer-table">
+        <tr>
+            <td class="footer-left">
+                <strong>:::: Bank Details ::::</strong><br><br>
+                <strong>Bank Name: {{ order.company.bank_name|default:"N/A" }}</strong><br>
+                <strong>Branch: {{ order.company.bank_branch|default:"N/A" }}</strong><br>
+                <strong>Account No: {{ order.company.bank_account|default:"N/A" }}</strong><br>
+                <strong>IFSC Code: {{ order.company.ifsc_code|default:"N/A" }}</strong><br><br>
+                <div style="font-size: 8pt; margin-top: 10px;">
+                    :::: Terms and Conditions ::::
+                </div>
+            </td>
+            <td style="width: 40%; vertical-align: bottom; text-align: right;">
+                <div>For {{ order.company.name }},</div>
+                <div class="signature-area">
+                    <div class="signature-line">
+                        <strong>Authorised Signature</strong>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">( Common Seal )</div>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
