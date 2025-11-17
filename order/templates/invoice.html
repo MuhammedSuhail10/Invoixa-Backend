@@ -328,8 +328,10 @@
                 <div>For {{ order.company.name }},</div>
                 <div class="signature-area">
                     <div class="signature-line">
-                        <img src="{{ signature_path }}" alt="Signature" style="max-width: 100px; max-height: 50px;">
-                        <strong>Authorised Signature</strong>
+                        {% if signature_data %}
+                            <img src="{{ signature_data }}" alt="Signature" style="width: 150px; height: 150px;">
+                        {% endif %}
+                        <p><strong>Authorised Signature</strong></p>
                     </div>
                 </div>
                 <div style="margin-top: 10px;">( Common Seal )</div>

@@ -6,6 +6,7 @@ from num2words import num2words
 from django.conf import settings
 from django.template.loader import get_template
 from company.models import CompanyBankDetail
+import base64
 from xhtml2pdf import pisa 
 
 # --- Minimal Invoice Generator using HTML/xhtml2pdf ---
@@ -69,6 +70,14 @@ class InvoicePDFGenerator:
                 'total': item_total + cgst_amount + sgst_amount,
             })
         bank_details = CompanyBankDetail.objects.filter(company=self.order.company).first()
+        signature_data = None
+        if self.order.company.signature:
+            try:
+                with self.order.company.signature.open('rb') as img_file:
+                    img_base64 = base64.b64encode(img_file.read()).decode()
+                    signature_data = f"data:image/jpeg;base64,{img_base64}"
+            except Exception as e:
+                print(f"Error loading signature: {e}")
         return {
             'order': self.order,
             'bank_details': bank_details,
@@ -80,6 +89,7 @@ class InvoicePDFGenerator:
             'rounded_amount': self.rounded_amount,
             'round_off': self.round_off,
             'amount_words': self.amount_words,
+            "signature_data": signature_data,
         }
 
     def generate(self):
